@@ -8,8 +8,9 @@ Contributions are welcome!
 
 # How to use pre-prompts in Copilot?
 
-To create a prompt put it in `.github/prompts` Folder
-In Copilot Window:
+To create a prompt put it in `.github/prompts` Folder and add `.prompt.md` extension
+
+## In Copilot Window:
 
 - Click on Add Context...
   ![Add Context...](img/AddContext.png)
