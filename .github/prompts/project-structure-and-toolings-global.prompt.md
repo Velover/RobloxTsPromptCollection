@@ -95,14 +95,14 @@ import { Controller, OnStart, OnInit } from "@flamework/core";
 
 @Controller({})
 export class SomeController implements OnStart, OnInit {
-	constructor(
-		private readonly _someOtherController: SomeOtherController,
-		private readonly _someOtherSystem: SomeOtherSystem,
-	) {}
+  constructor(
+    private readonly _someOtherController: SomeOtherController,
+    private readonly _someOtherSystem: SomeOtherSystem
+  ) {}
 
-	onInit() {}
+  onInit() {}
 
-	onStart() {}
+  onStart() {}
 }
 ```
 
@@ -117,14 +117,14 @@ import { Service, OnStart, OnInit } from "@flamework/core";
 
 @Service({})
 export class SomeService implements OnStart, OnInit {
-	constructor(
-		private readonly _someOtherService: SomeOtherService,
-		private readonly _someOtherSystem: SomeOtherSystem,
-	) {}
+  constructor(
+    private readonly _someOtherService: SomeOtherService,
+    private readonly _someOtherSystem: SomeOtherSystem
+  ) {}
 
-	onInit() {}
+  onInit() {}
 
-	onStart() {}
+  onStart() {}
 }
 ```
 
@@ -141,10 +141,17 @@ Should be as isolated as possible
 - Only use Systems when functionality is required by both server and client and doesn't have a clear separation
 - For functionality that should run exclusively on client or server, use Controllers or Services instead
 - When including limited server-only or client-only functionality in Systems, use runtime assertions:
+
   ```ts
   assert(RunService.IsClient(), "This function should run ONLY on the client");
   assert(RunService.IsServer(), "This function should run ONLY on the server");
   ```
+
+- System instances on server and client maintain separate states and do not automatically synchronize
+- If state synchronization between server and client is needed, you must use explicit networking solutions:
+  - @rbxts/flamework networking (recommended)
+  - Roblox RemoteEvents/RemoteFunctions
+  - Any other provided networking library
 
 Example:
 
@@ -152,25 +159,31 @@ Example:
 @Controller({})
 @Service({})
 export class SomeSystem implements OnStart, OnInit {
-	constructor(
-		private readonly _someOtherSystem: SomeOtherSystem, //only other systems are allowed in auto-injection
-	) {}
+  constructor(
+    private readonly _someOtherSystem: SomeOtherSystem //only other systems are allowed in auto-injection
+  ) {}
 
-	onInit() {}
+  onInit() {}
 
-	onStart() {}
+  onStart() {}
 
-	// Example of a client-only function within a System
-	public ClientOnlyFunction() {
-		assert(RunService.IsClient(), "This function should run ONLY on the client");
-		// Client-specific code
-	}
+  // Example of a client-only function within a System
+  public ClientOnlyFunction() {
+    assert(
+      RunService.IsClient(),
+      "This function should run ONLY on the client"
+    );
+    // Client-specific code
+  }
 
-	// Example of a server-only function within a System
-	public ServerOnlyFunction() {
-		assert(RunService.IsServer(), "This function should run ONLY on the server");
-		// Server-specific code
-	}
+  // Example of a server-only function within a System
+  public ServerOnlyFunction() {
+    assert(
+      RunService.IsServer(),
+      "This function should run ONLY on the server"
+    );
+    // Server-specific code
+  }
 }
 ```
 
@@ -202,10 +215,10 @@ import { OnStart } from "@flamework/core";
 import { Component, BaseComponent } from "@flamework/components";
 
 interface Attributes {
-	//attributes guard - defines expected attributes and their types
-	Value1: number;
-	Value2: string;
-	//etc.
+  //attributes guard - defines expected attributes and their types
+  Value1: number;
+  Value2: string;
+  //etc.
 }
 
 type InstanceGuard = BasePart; //or any other Instance, that will ensure that the instance has that class
@@ -219,28 +232,31 @@ type InstanceGuardWithIncorrectChildName = BasePart & { Name: TextLabel }; //INC
 type InstanceGuardWithIllegalTypes = TextLabel & { Text: "Hello" }; //INCORRECT, Will cause an error
 
 @Component({
-	//optional but important for proper attribute handling
-	//if the instance doesn't have Attributes set, it will error, therefore defaults can be used for cases like this
-	//when provided, will replace missing values in attributes with specified values
-	defaults: {
-		Value1: 5,
-		Value2: "test",
-	},
+  //optional but important for proper attribute handling
+  //if the instance doesn't have Attributes set, it will error, therefore defaults can be used for cases like this
+  //when provided, will replace missing values in attributes with specified values
+  defaults: {
+    Value1: 5,
+    Value2: "test",
+  },
 })
-class CarsGameData extends BaseComponent<Attributes, InstanceGuard> implements OnStart {
-	constructor(
-		private readonly _someOtherController: SomeOtherController,
-		private readonly _someOtherService: SomeOtherService,
-		private readonly _someOtherSystem: SomeOtherSystem,
-	) {
-		super();
-	}
-	onStart() {}
+class CarsGameData
+  extends BaseComponent<Attributes, InstanceGuard>
+  implements OnStart
+{
+  constructor(
+    private readonly _someOtherController: SomeOtherController,
+    private readonly _someOtherService: SomeOtherService,
+    private readonly _someOtherSystem: SomeOtherSystem
+  ) {
+    super();
+  }
+  onStart() {}
 
-	// You can access attributes via this.attributes
-	GetValueOne(): number {
-		return this.attributes.Value1;
-	}
+  // You can access attributes via this.attributes
+  GetValueOne(): number {
+    return this.attributes.Value1;
+  }
 }
 ```
 
@@ -281,34 +297,34 @@ It follows the syntax of regular React v17.2.3
 ```tsx
 //can use .tsx files
 function App() {
-	return (
-		<screengui
-			//all properties should be written in the component directly
-			ResetOnSpawn={false}
-		>
-			{/*Some other children*/}
-		</screengui>
-	);
+  return (
+    <screengui
+      //all properties should be written in the component directly
+      ResetOnSpawn={false}
+    >
+      {/*Some other children*/}
+    </screengui>
+  );
 }
 
 function ComponentWithChildren({ children }: PropsWithChildren<{}>) {
-	return (
-		<frame
-		//...properties
-		>
-			{children}
-		</frame>
-	);
+  return (
+    <frame
+    //...properties
+    >
+      {children}
+    </frame>
+  );
 }
 
 function ComponentWithFragment() {
-	return (
-		<>
-			<frame />
-			<frame />
-			<frame />
-		</>
-	);
+  return (
+    <>
+      <frame />
+      <frame />
+      <frame />
+    </>
+  );
 }
 ```
 
@@ -318,48 +334,48 @@ Recommendation:
 
 ```tsx
 export function App() {
-	return (
-		<>
-			<MountedGuis />
-			<LoadutPromptGui />
-			<DamageIndicatorGui />
+  return (
+    <>
+      <MountedGuis />
+      <LoadutPromptGui />
+      <DamageIndicatorGui />
 
-			<SideMenuGui />
+      <SideMenuGui />
 
-			<KillFeedbackGui />
-			<InventoryGui />
-			<CrosshairGui />
+      <KillFeedbackGui />
+      <InventoryGui />
+      <CrosshairGui />
 
-			<CentralMenuGui />
-			<TopbarGui />
-			<ToolTipGui />
-		</>
-	);
+      <CentralMenuGui />
+      <TopbarGui />
+      <ToolTipGui />
+    </>
+  );
 }
 ```
 
 ```ts
 @Controller({})
 export class UIController implements OnStart, OnInit {
-	onInit() {}
+  onInit() {}
 
-	onStart() {
-		//AVOID setting container as PlayerGui directly
-		//It deletes every other Instance in PlayerGui including Roblox auto-injected ones and can break movement for mobile users
-		const container = new Instance("ScreenGui");
+  onStart() {
+    //AVOID setting container as PlayerGui directly
+    //It deletes every other Instance in PlayerGui including Roblox auto-injected ones and can break movement for mobile users
+    const container = new Instance("ScreenGui");
 
-		//The ScreenGui can be used as the container and even have other ScreenGuis, BillboardGuis and SurfaceGuis in it without breaking
-		//The Screen gui can contain other ScreenGuis/BillboardGuis/SurfaceGuis without breaking their functionality
+    //The ScreenGui can be used as the container and even have other ScreenGuis, BillboardGuis and SurfaceGuis in it without breaking
+    //The Screen gui can contain other ScreenGuis/BillboardGuis/SurfaceGuis without breaking their functionality
 
-		//The most important property that has to be set
-		//otherwise all UI will disappear when the player dies
-		container.ResetOnSpawn = false;
-		container.Parent = Players.LocalPlayer.WaitForChild("PlayerGui");
+    //The most important property that has to be set
+    //otherwise all UI will disappear when the player dies
+    container.ResetOnSpawn = false;
+    container.Parent = Players.LocalPlayer.WaitForChild("PlayerGui");
 
-		//create root in the Controller only, because the UI can require other Controllers and if UI starts separately from the Flamework lifecycle, it will cause errors
-		const root = createRoot(container);
-		root.render(React.createElement(App, {}));
-	}
+    //create root in the Controller only, because the UI can require other Controllers and if UI starts separately from the Flamework lifecycle, it will cause errors
+    const root = createRoot(container);
+    root.render(React.createElement(App, {}));
+  }
 }
 ```
 
@@ -383,18 +399,18 @@ Utility functions:
 //subscribe utility,
 //will subscribe to the changes of atom
 subscribe(valueAtom, (value) => {
-	HandleValue(value);
+  HandleValue(value);
 });
 
 //atom is a function, and you can detect and subscribe to atom at any depth of the function, no matter how nested it is
 subscribe(valueAtom, (value) => {});
 subscribe(
-	() => valueAtom(),
-	(value) => {},
+  () => valueAtom(),
+  (value) => {}
 );
 subscribe(
-	() => (() => valueAtom())(),
-	(value) => {},
+  () => (() => valueAtom())(),
+  (value) => {}
 );
 
 //effect utility
@@ -402,33 +418,33 @@ subscribe(
 
 //will run immediately and will re-run each time the subscribed atom has changed
 effect(() => {
-	const value = valueAtom();
-	DoSomething(value);
+  const value = valueAtom();
+  DoSomething(value);
 
-	//returns cleanup function that will be executed if the atom will change and the callback will be re-run
-	return () => {
-		CleanUp();
-	};
+  //returns cleanup function that will be executed if the atom will change and the callback will be re-run
+  return () => {
+    CleanUp();
+  };
 });
 
 //effect will only subscribe to atoms that have been read
 const condition = false;
 effect(() => {
-	if (condition) {
-		const value1 = valueAtom1(); //will never be subscribed to, because it reads only Atom2, but it
-		DoSomething(value1);
-	} else {
-		const value2 = valueAtom2();
-		DoSomething(value2);
-	}
+  if (condition) {
+    const value1 = valueAtom1(); //will never be subscribed to, because it reads only Atom2, but it
+    DoSomething(value1);
+  } else {
+    const value2 = valueAtom2();
+    DoSomething(value2);
+  }
 
-	return CleanUpFunction;
+  return CleanUpFunction;
 });
 
 //peek utility
 //it will prevent atom from being subscribed to, at any depth
 effect(() => {
-	const value = peek(valueAtom); //will never get subscribed to and therefore the function in effect will never re-run;
+  const value = peek(valueAtom); //will never get subscribed to and therefore the function in effect will never re-run;
 });
 ```
 
@@ -444,13 +460,13 @@ const valueAtom = atom(startValue);
 
 ```ts
 function GetValueAtom() {
-	//adding Atom to track
-	return valueAtom();
+  //adding Atom to track
+  return valueAtom();
 }
 
 function GetSomethingRelatedAtom() {
-	//still add atom because it has the function that reads atom directly
-	const value = GetValueAtom();
+  //still add atom because it has the function that reads atom directly
+  const value = GetValueAtom();
 }
 ```
 
@@ -458,8 +474,8 @@ function GetSomethingRelatedAtom() {
 
 ```ts
 function DoSomething() {
-	//No need to add Atom postfix because we prevented subscription to atom inside by using peek
-	const value = peek(GetValueAtom); //because peek doesn't allow to subscribe to any atoms inside and therefore prevents chain of subscription
+  //No need to add Atom postfix because we prevented subscription to atom inside by using peek
+  const value = peek(GetValueAtom); //because peek doesn't allow to subscribe to any atoms inside and therefore prevents chain of subscription
 }
 ```
 
@@ -467,8 +483,8 @@ function DoSomething() {
 
 ```ts
 function DoSomething() {
-	//as well, avoid Atom because it's not subscribable
-	const value = peek(GetValueAtom); //should prevent any subscriptions
+  //as well, avoid Atom because it's not subscribable
+  const value = peek(GetValueAtom); //should prevent any subscriptions
 }
 ```
 
@@ -486,28 +502,28 @@ import { useAtom } from "@rbxts/react-charm";
 
 @Controller({})
 export class ShopMenuController implements OnStart, OnInit {
-	private _isMenuVisibleAtom = atom(false);
-	private _otherValueAtom = atom(otherStartValue);
+  private _isMenuVisibleAtom = atom(false);
+  private _otherValueAtom = atom(otherStartValue);
 
-	onInit() {}
+  onInit() {}
 
-	onStart() {}
+  onStart() {}
 
-	GetMenuVisibleAtom() {
-		//allows to read the atom from outside of UI
-		return _isMenuVisibleAtom();
-	}
+  GetMenuVisibleAtom() {
+    //allows to read the atom from outside of UI
+    return _isMenuVisibleAtom();
+  }
 
-	SetMenuVisible(value: boolean) {
-		//allows to set the atom within UI and outside of UI
-		_isMenuVisibleAtom(value);
-	}
+  SetMenuVisible(value: boolean) {
+    //allows to set the atom within UI and outside of UI
+    _isMenuVisibleAtom(value);
+  }
 
-	useMenuVisibleAtom() {
-		//hook that provides functionality of subscribing to valueAtom
-		const value = useAtom(_isMenuVisibleAtom);
-		return value;
-	}
+  useMenuVisibleAtom() {
+    //hook that provides functionality of subscribing to valueAtom
+    const value = useAtom(_isMenuVisibleAtom);
+    return value;
+  }
 }
 ```
 
@@ -518,17 +534,19 @@ import { useFlameworkDependency } from "@rbxts/flamework-react-utils";
 import { ShopMenuController } from "../PATH_TO_SHOP_MENU_CONTROLLER";
 
 function ShopMenu() {
-	//still cannot use Controllers directly and it requires getting them with macro
-	//useFlameworkDependency is different from Dependency because it memorizes the controller once it got it
-	const shopMenuController = useFlameworkDependency<ShopMenuController>();
-	const isVisible = shopMenuController.useMenuVisibleAtom();
+  //still cannot use Controllers directly and it requires getting them with macro
+  //useFlameworkDependency is different from Dependency because it memorizes the controller once it got it
+  const shopMenuController = useFlameworkDependency<ShopMenuController>();
+  const isVisible = shopMenuController.useMenuVisibleAtom();
 
-	return (
-		<ShopFrame>
-			<ToggleButton OnClick={() => shopMenuController.SetMenuVisible(!isVisible)} />
-			<ShopMenu IsVisible={isVisible} />
-		</ShopFrame>
-	);
+  return (
+    <ShopFrame>
+      <ToggleButton
+        OnClick={() => shopMenuController.SetMenuVisible(!isVisible)}
+      />
+      <ShopMenu IsVisible={isVisible} />
+    </ShopFrame>
+  );
 }
 ```
 
@@ -545,7 +563,7 @@ const sortedArray = numberArray.sort((a, b) => a > b); //A function that defines
 ```ts
 //utility function for roblox-ts
 function CharAt(str: string, index: number) {
-	return str.sub(index + 1, index + 1);
+  return str.sub(index + 1, index + 1);
 }
 
 const char = CharAt("test", 0); //"t"
@@ -568,7 +586,7 @@ const keys = [...map].map(([key, value]) => key);
 
 ```ts
 for (const [key, value] of pairs(someObject)) {
-	//...code
+  //...code
 }
 ```
 
@@ -581,32 +599,38 @@ for (const [key, value] of pairs(someObject)) {
 @Controller({})
 @Service({})
 export class WeaponSystem implements OnStart, OnInit {
-	// Only depends on other systems
-	constructor(private readonly _damageSystem: DamageSystem) {}
+  // Only depends on other systems
+  constructor(private readonly _damageSystem: DamageSystem) {}
 
-	// Shared logic used by both client and server
-	CalculateDamage(weapon: string, distance: number): number {
-		return this._damageSystem.getBaseDamage(weapon) * this.getFalloffMultiplier(distance);
-	}
+  // Shared logic used by both client and server
+  CalculateDamage(weapon: string, distance: number): number {
+    return (
+      this._damageSystem.getBaseDamage(weapon) *
+      this.getFalloffMultiplier(distance)
+    );
+  }
 
-	// Client-only functionality with safety check
-	PlayWeaponEffects(weapon: string): void {
-		assert(RunService.IsClient(), "Weapon effects can only be played on the client");
-		// Effect playing code
-	}
+  // Client-only functionality with safety check
+  PlayWeaponEffects(weapon: string): void {
+    assert(
+      RunService.IsClient(),
+      "Weapon effects can only be played on the client"
+    );
+    // Effect playing code
+  }
 }
 
 // BAD: System with improper dependencies
 @Controller({})
 @Service({})
 export class BadWeaponSystem implements OnStart, OnInit {
-	constructor(
-		private readonly _playerController: PlayerController, // BAD: Depends on Controller
-		private readonly _dataService: DataService, // BAD: Depends on Service
-	) {}
+  constructor(
+    private readonly _playerController: PlayerController, // BAD: Depends on Controller
+    private readonly _dataService: DataService // BAD: Depends on Service
+  ) {}
 
-	// This system will have issues as it attempts to use client/server specific
-	// components without proper isolation
+  // This system will have issues as it attempts to use client/server specific
+  // components without proper isolation
 }
 ```
 
@@ -614,30 +638,30 @@ export class BadWeaponSystem implements OnStart, OnInit {
 
 ```ts
 interface Attributes {
-	Health: number;
-	Speed: number;
-	CanRespawn: boolean;
+  Health: number;
+  Speed: number;
+  CanRespawn: boolean;
 }
 // GOOD: Component with clear attribute handling
 @Component({
-	defaults: {
-		Health: 100,
-		Speed: 16,
-		CanRespawn: true,
-	},
+  defaults: {
+    Health: 100,
+    Speed: 16,
+    CanRespawn: true,
+  },
 })
 class CharacterComponent extends BaseComponent<Attributes, Model> {
-	// Component implementation
+  // Component implementation
 
-	TakeDamage(amount: number): void {
-		// Attributes are automatically synchronized with Roblox instance attributes
-		this.attributes.Health -= amount;
+  TakeDamage(amount: number): void {
+    // Attributes are automatically synchronized with Roblox instance attributes
+    this.attributes.Health -= amount;
 
-		// You can update an attribute like this
-		if (this.attributes.Health <= 0) {
-			this.attributes.CanRespawn = false;
-		}
-	}
+    // You can update an attribute like this
+    if (this.attributes.Health <= 0) {
+      this.attributes.CanRespawn = false;
+    }
+  }
 }
 ```
 
@@ -648,18 +672,18 @@ class CharacterComponent extends BaseComponent<Attributes, Model> {
 ```ts
 // BAD: Regular enum
 enum Direction {
-	Up,
-	Down,
-	Left,
-	Right,
+  Up,
+  Down,
+  Left,
+  Right,
 }
 
 // GOOD: const enum for better performance
 const enum Direction {
-	Up,
-	Down,
-	Left,
-	Right,
+  Up,
+  Down,
+  Left,
+  Right,
 }
 ```
 
@@ -671,25 +695,25 @@ const enum Direction {
 ```ts
 // BAD: Inlined interface
 class CharacterComponent extends BaseComponent<
-	{
-		Health: number;
-		Speed: number;
-		CanRespawn: boolean;
-	},
-	Model
+  {
+    Health: number;
+    Speed: number;
+    CanRespawn: boolean;
+  },
+  Model
 > {
-	// Implementation
+  // Implementation
 }
 
 // GOOD: Separate interface definition
 interface CharacterAttributes {
-	Health: number;
-	Speed: number;
-	CanRespawn: boolean;
+  Health: number;
+  Speed: number;
+  CanRespawn: boolean;
 }
 
 class CharacterComponent extends BaseComponent<CharacterAttributes, Model> {
-	// Implementation with better readability
+  // Implementation with better readability
 }
 ```
 
@@ -700,16 +724,16 @@ class CharacterComponent extends BaseComponent<CharacterAttributes, Model> {
 ```ts
 // For components:
 interface WeaponAttributes {
-	/* ... */
+  /* ... */
 }
 class WeaponComponent extends BaseComponent<WeaponAttributes, Model> {
-	/* ... */
+  /* ... */
 }
 
 // For systems:
 const enum WeaponType /* ... */ {}
 class WeaponSystem implements OnStart, OnInit {
-	/* ... */
+  /* ... */
 }
 ```
 
@@ -720,16 +744,16 @@ class WeaponSystem implements OnStart, OnInit {
 
 ```ts
 interface PrivateDataType {
-	//can be outside of class, because it's not exported
-	Value1: string;
+  //can be outside of class, because it's not exported
+  Value1: string;
 }
 export class SomeClass {}
 
 export namespace SomeClass {
-	export interface PublicDataType {
-		//coupled to the related namespace or class when needs to be exported
-		Value1: number;
-	}
+  export interface PublicDataType {
+    //coupled to the related namespace or class when needs to be exported
+    Value1: number;
+  }
 }
 ```
 

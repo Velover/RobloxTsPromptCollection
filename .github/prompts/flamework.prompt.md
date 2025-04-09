@@ -51,14 +51,14 @@ import { Controller, OnStart, OnInit } from "@flamework/core";
 
 @Controller({})
 export class SomeController implements OnStart, OnInit {
-	constructor(
-		private readonly _someOtherController: SomeOtherController,
-		private readonly _someOtherSystem: SomeOtherSystem,
-	) {}
+  constructor(
+    private readonly _someOtherController: SomeOtherController,
+    private readonly _someOtherSystem: SomeOtherSystem
+  ) {}
 
-	onInit() {}
+  onInit() {}
 
-	onStart() {}
+  onStart() {}
 }
 ```
 
@@ -73,14 +73,14 @@ import { Service, OnStart, OnInit } from "@flamework/core";
 
 @Service({})
 export class SomeService implements OnStart, OnInit {
-	constructor(
-		private readonly _someOtherService: SomeOtherService,
-		private readonly _someOtherSystem: SomeOtherSystem,
-	) {}
+  constructor(
+    private readonly _someOtherService: SomeOtherService,
+    private readonly _someOtherSystem: SomeOtherSystem
+  ) {}
 
-	onInit() {}
+  onInit() {}
 
-	onStart() {}
+  onStart() {}
 }
 ```
 
@@ -97,10 +97,18 @@ Should be as isolated as possible
 - Only use Systems when functionality is required by both server and client and doesn't have a clear separation
 - For functionality that should run exclusively on client or server, use Controllers or Services instead
 - When including limited server-only or client-only functionality in Systems, use runtime assertions:
-  ```ts
-  assert(RunService.IsClient(), "This function should run ONLY on the client");
-  assert(RunService.IsServer(), "This function should run ONLY on the server");
-  ```
+
+```ts
+assert(RunService.IsClient(), "This function should run ONLY on the client");
+assert(RunService.IsServer(), "This function should run ONLY on the server");
+```
+
+- System instances on server and client maintain separate states and do not automatically synchronize
+
+- If state synchronization between server and client is needed, you must use explicit networking solutions:
+  - @rbxts/flamework networking (recommended)
+  - Roblox RemoteEvents/RemoteFunctions
+  - Any other provided networking library
 
 Example:
 
@@ -108,25 +116,31 @@ Example:
 @Controller({})
 @Service({})
 export class SomeSystem implements OnStart, OnInit {
-	constructor(
-		private readonly _someOtherSystem: SomeOtherSystem, //only other systems are allowed in auto-injection
-	) {}
+  constructor(
+    private readonly _someOtherSystem: SomeOtherSystem //only other systems are allowed in auto-injection
+  ) {}
 
-	onInit() {}
+  onInit() {}
 
-	onStart() {}
+  onStart() {}
 
-	// Example of a client-only function within a System
-	public ClientOnlyFunction() {
-		assert(RunService.IsClient(), "This function should run ONLY on the client");
-		// Client-specific code
-	}
+  // Example of a client-only function within a System
+  public ClientOnlyFunction() {
+    assert(
+      RunService.IsClient(),
+      "This function should run ONLY on the client"
+    );
+    // Client-specific code
+  }
 
-	// Example of a server-only function within a System
-	public ServerOnlyFunction() {
-		assert(RunService.IsServer(), "This function should run ONLY on the server");
-		// Server-specific code
-	}
+  // Example of a server-only function within a System
+  public ServerOnlyFunction() {
+    assert(
+      RunService.IsServer(),
+      "This function should run ONLY on the server"
+    );
+    // Server-specific code
+  }
 }
 ```
 
@@ -158,10 +172,10 @@ import { OnStart } from "@flamework/core";
 import { Component, BaseComponent } from "@flamework/components";
 
 interface Attributes {
-	//attributes guard - defines expected attributes and their types
-	Value1: number;
-	Value2: string;
-	//etc.
+  //attributes guard - defines expected attributes and their types
+  Value1: number;
+  Value2: string;
+  //etc.
 }
 
 type InstanceGuard = BasePart; //or any other Instance, that will ensure that the instance has that class
@@ -175,28 +189,31 @@ type InstanceGuardWithIncorrectChildName = BasePart & { Name: TextLabel }; //INC
 type InstanceGuardWithIllegalTypes = TextLabel & { Text: "Hello" }; //INCORRECT, Will cause an error
 
 @Component({
-	//optional but important for proper attribute handling
-	//if the instance doesn't have Attributes set, it will error, therefore defaults can be used for cases like this
-	//when provided, will replace missing values in attributes with specified values
-	defaults: {
-		Value1: 5,
-		Value2: "test",
-	},
+  //optional but important for proper attribute handling
+  //if the instance doesn't have Attributes set, it will error, therefore defaults can be used for cases like this
+  //when provided, will replace missing values in attributes with specified values
+  defaults: {
+    Value1: 5,
+    Value2: "test",
+  },
 })
-class CarsGameData extends BaseComponent<Attributes, InstanceGuard> implements OnStart {
-	constructor(
-		private readonly _someOtherController: SomeOtherController,
-		private readonly _someOtherService: SomeOtherService,
-		private readonly _someOtherSystem: SomeOtherSystem,
-	) {
-		super();
-	}
-	onStart() {}
+class CarsGameData
+  extends BaseComponent<Attributes, InstanceGuard>
+  implements OnStart
+{
+  constructor(
+    private readonly _someOtherController: SomeOtherController,
+    private readonly _someOtherService: SomeOtherService,
+    private readonly _someOtherSystem: SomeOtherSystem
+  ) {
+    super();
+  }
+  onStart() {}
 
-	// You can access attributes via this.attributes
-	GetValueOne(): number {
-		return this.attributes.Value1;
-	}
+  // You can access attributes via this.attributes
+  GetValueOne(): number {
+    return this.attributes.Value1;
+  }
 }
 ```
 
