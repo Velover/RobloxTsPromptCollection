@@ -1,4 +1,6 @@
-Requirements (Project structure):
+# Roblox-TS Project Structure and Toolings
+
+## Requirements (Project structure):
 
 - Feature-based separation
 
@@ -27,7 +29,7 @@ src/
 /shared
 ```
 
-Requirements (toolings):
+## Requirements (toolings):
 
 - The project is using roblox-ts which is a slightly modified TypeScript version that transpiles to Lua
 - The roblox-ts uses mostly Roblox-Luau API for instances, Math, Arrays, strings, objects
@@ -35,7 +37,7 @@ Requirements (toolings):
 - The UI of the game is @rbxts/react (TSX) NOT @rbxts/roact
 - For UI state management, the game is using @rbxts/charm
 
-Requirements (Project):
+## Requirements (Project):
 
 - DO NOT modify the package.json file, suggest commands for that instead
 - Project follows the @rbxts/flamework lifecycle
@@ -132,6 +134,18 @@ Shared Singleton responsible for a specific feature
 
 Should be as isolated as possible
 
+**Important clarification on Systems isolation**:
+
+- Systems run on BOTH server and client simultaneously
+- Systems should NOT rely on Controllers or Services, but CAN rely on other Systems
+- Only use Systems when functionality is required by both server and client and doesn't have a clear separation
+- For functionality that should run exclusively on client or server, use Controllers or Services instead
+- When including limited server-only or client-only functionality in Systems, use runtime assertions:
+  ```ts
+  assert(RunService.IsClient(), "This function should run ONLY on the client");
+  assert(RunService.IsServer(), "This function should run ONLY on the server");
+  ```
+
 Example:
 
 ```ts
@@ -145,6 +159,18 @@ export class SomeSystem implements OnStart, OnInit {
 	onInit() {}
 
 	onStart() {}
+
+	// Example of a client-only function within a System
+	public ClientOnlyFunction() {
+		assert(RunService.IsClient(), "This function should run ONLY on the client");
+		// Client-specific code
+	}
+
+	// Example of a server-only function within a System
+	public ServerOnlyFunction() {
+		assert(RunService.IsServer(), "This function should run ONLY on the server");
+		// Server-specific code
+	}
 }
 ```
 
@@ -154,8 +180,8 @@ A class responsible for instance control
 
 Includes:
 
-- Attributes guard
-- Instance guard
+- Attributes guard - validates attributes on Roblox instances
+- Instance guard - ensures the instance is of correct type
 
 Uses auto-injection as well for Services / Controllers / Systems
 
@@ -176,7 +202,7 @@ import { OnStart } from "@flamework/core";
 import { Component, BaseComponent } from "@flamework/components";
 
 interface Attributes {
-	//attributes guard
+	//attributes guard - defines expected attributes and their types
 	Value1: number;
 	Value2: string;
 	//etc.
@@ -193,7 +219,7 @@ type InstanceGuardWithIncorrectChildName = BasePart & { Name: TextLabel }; //INC
 type InstanceGuardWithIllegalTypes = TextLabel & { Text: "Hello" }; //INCORRECT, Will cause an error
 
 @Component({
-	//optional
+	//optional but important for proper attribute handling
 	//if the instance doesn't have Attributes set, it will error, therefore defaults can be used for cases like this
 	//when provided, will replace missing values in attributes with specified values
 	defaults: {
@@ -210,6 +236,11 @@ class CarsGameData extends BaseComponent<Attributes, InstanceGuard> implements O
 		super();
 	}
 	onStart() {}
+
+	// You can access attributes via this.attributes
+	GetValueOne(): number {
+		return this.attributes.Value1;
+	}
 }
 ```
 
@@ -236,7 +267,7 @@ const component1 = components.getComponent<SomeComponent>(instance); //will try 
 
 const component2 = await components.waitForComponent<SomeComponent>(instance); //returns async that awaits the component in instance
 
-const components_list = components.getAllComponents<SomeComponents>(instance); //gets all Components of specified type that exist on instances
+const componentsList = components.getAllComponents<SomeComponents>(instance); //gets all Components of specified type that exist on instances
 ```
 
 You CANNOT use Dependency before ignition `Flamework.ignite();`, this will cause an error, therefore injection should be preferred. Avoid using it in global space. Functions can be acceptable.
@@ -540,3 +571,169 @@ for (const [key, value] of pairs(someObject)) {
 	//...code
 }
 ```
+
+# Additional Best Practices
+
+### System Isolation Example
+
+```ts
+// GOOD: Properly isolated system
+@Controller({})
+@Service({})
+export class WeaponSystem implements OnStart, OnInit {
+	// Only depends on other systems
+	constructor(private readonly _damageSystem: DamageSystem) {}
+
+	// Shared logic used by both client and server
+	CalculateDamage(weapon: string, distance: number): number {
+		return this._damageSystem.getBaseDamage(weapon) * this.getFalloffMultiplier(distance);
+	}
+
+	// Client-only functionality with safety check
+	PlayWeaponEffects(weapon: string): void {
+		assert(RunService.IsClient(), "Weapon effects can only be played on the client");
+		// Effect playing code
+	}
+}
+
+// BAD: System with improper dependencies
+@Controller({})
+@Service({})
+export class BadWeaponSystem implements OnStart, OnInit {
+	constructor(
+		private readonly _playerController: PlayerController, // BAD: Depends on Controller
+		private readonly _dataService: DataService, // BAD: Depends on Service
+	) {}
+
+	// This system will have issues as it attempts to use client/server specific
+	// components without proper isolation
+}
+```
+
+### Component Attributes Best Practices
+
+```ts
+interface Attributes {
+	Health: number;
+	Speed: number;
+	CanRespawn: boolean;
+}
+// GOOD: Component with clear attribute handling
+@Component({
+	defaults: {
+		Health: 100,
+		Speed: 16,
+		CanRespawn: true,
+	},
+})
+class CharacterComponent extends BaseComponent<Attributes, Model> {
+	// Component implementation
+
+	TakeDamage(amount: number): void {
+		// Attributes are automatically synchronized with Roblox instance attributes
+		this.attributes.Health -= amount;
+
+		// You can update an attribute like this
+		if (this.attributes.Health <= 0) {
+			this.attributes.CanRespawn = false;
+		}
+	}
+}
+```
+
+### Project Best Practices
+
+#### Use `const enum` Instead of Regular `enum`
+
+```ts
+// BAD: Regular enum
+enum Direction {
+	Up,
+	Down,
+	Left,
+	Right,
+}
+
+// GOOD: const enum for better performance
+const enum Direction {
+	Up,
+	Down,
+	Left,
+	Right,
+}
+```
+
+- Always prefer `const enum` when possible as they are inlined at compile time, resulting in better performance
+- Use enums when dealing with a limited set of options rather than string literals
+
+#### Avoid Inlining Interfaces
+
+```ts
+// BAD: Inlined interface
+class CharacterComponent extends BaseComponent<
+	{
+		Health: number;
+		Speed: number;
+		CanRespawn: boolean;
+	},
+	Model
+> {
+	// Implementation
+}
+
+// GOOD: Separate interface definition
+interface CharacterAttributes {
+	Health: number;
+	Speed: number;
+	CanRespawn: boolean;
+}
+
+class CharacterComponent extends BaseComponent<CharacterAttributes, Model> {
+	// Implementation with better readability
+}
+```
+
+- Separate interface definitions improve readability and reusability
+
+#### Consistent Naming Conventions
+
+```ts
+// For components:
+interface WeaponAttributes {
+	/* ... */
+}
+class WeaponComponent extends BaseComponent<WeaponAttributes, Model> {
+	/* ... */
+}
+
+// For systems:
+const enum WeaponType /* ... */ {}
+class WeaponSystem implements OnStart, OnInit {
+	/* ... */
+}
+```
+
+- Use consistent naming patterns to improve code navigation and organization
+- Group related enums, interfaces, and classes in the same file when they're tightly coupled
+
+#### Namespace Organization to Avoid Global Pollution
+
+```ts
+interface PrivateDataType {
+	//can be outside of class, because it's not exported
+	Value1: string;
+}
+export class SomeClass {}
+
+export namespace SomeClass {
+	export interface PublicDataType {
+		//coupled to the related namespace or class when needs to be exported
+		Value1: number;
+	}
+}
+```
+
+- Couple exported interfaces, types, and enums to related namespaces or types
+- This prevents them from polluting the global namespace
+- Private types can remain uncoupled if they're not exported
+- This approach improves code organization and reduces name collisions
