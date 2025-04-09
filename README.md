@@ -31,3 +31,21 @@ To create a prompt put it in `.github/prompts` Folder and add `.prompt.md` exten
 - Prefer using Claude 3.7 Sonnet Thinking, because in my opinion it follows the prompt the best
 
 - If the AI continues to make mistakes, consider creating a new chat to reset the context
+
+- Prefer using Feature-Based separation [Flamework Template](https://github.com/Velover/TSFlameworkGameTemplate) as it provides a ready-to-use project structure.
+
+### Feature-Based template
+
+**Bun**
+
+```console
+bunx degit https://github.com/Velover/TSFlameworkGameTemplate#Features
+bun i
+```
+
+**NPM**
+
+```console
+npx degit https://github.com/Velover/TSFlameworkGameTemplate#Features
+npm i
+```
