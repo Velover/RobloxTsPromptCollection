@@ -13,11 +13,17 @@ To create a prompt put it in `.github/prompts` Folder and add `.prompt.md` exten
 ## In Copilot Window:
 
 - Click on Add Context...
+
   ![Add Context...](img/AddContext.png)
+
 - Choose prompt
+
   ![Prompt Selection](img/PromptSelection.png)
+
   ![Prompt List](img/PromptsList.png)
+
 - Do a main prompt
+
   ![Making a main prompt](img/MainPrompt.png)
 
 ## Recommendations:
