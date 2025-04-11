@@ -1,4 +1,4 @@
-# Integration @rbxts/flamework @rbxts/charm and @rbxts/react
+# Integration @flamework/core @rbxts/charm and @rbxts/react
 
 Since charm acts almost like jotai, it can be used to manage state in React
 
