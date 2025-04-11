@@ -1,4 +1,4 @@
-# @rbxts/flamework
+# @flamework/core
 
 Flamework uses items like:
 
@@ -106,7 +106,7 @@ assert(RunService.IsServer(), "This function should run ONLY on the server");
 - System instances on server and client maintain separate states and do not automatically synchronize
 
 - If state synchronization between server and client is needed, you must use explicit networking solutions:
-  - @rbxts/flamework networking (recommended)
+  - @flamework/core networking (recommended)
   - Roblox RemoteEvents/RemoteFunctions
   - Any other provided networking library
 
