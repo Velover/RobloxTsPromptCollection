@@ -33,11 +33,11 @@ src/
 
 - The project is using roblox-ts which is a slightly modified TypeScript version that transpiles to Lua
 - The roblox-ts uses mostly Roblox-Luau API for instances, Math, Arrays, strings, objects
-- The core of the game is @rbxts/flamework
+- The core of the game is @flamework/core with @flamework/networking
 - The UI of the game is @rbxts/react (TSX) NOT @rbxts/roact
 - For UI state management, the game is using @rbxts/charm
 
 ## Requirements (Project):
 
 - DO NOT modify the package.json file, suggest commands for that instead
-- Project follows the @rbxts/flamework lifecycle
+- Project follows the @flamework/core lifecycle

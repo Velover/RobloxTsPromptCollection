@@ -1,82 +1,78 @@
-# @rbxts/react
+# @rbxts/react Basics
 
-@rbxts/react is NOT (@rbxts/roact)
+@rbxts/react is a TypeScript package that provides React-like functionality for Roblox TypeScript (roblox-ts) projects, following the syntax of regular React v17.2.3. It is important to note that @rbxts/react is NOT the same as @rbxts/roact.
 
-It follows the syntax of regular React v17.2.3
+## Core Features and Syntax
+
+@rbxts/react allows you to create UI components using TSX syntax, similar to how you would in a web React application:
 
 ```tsx
-//can use .tsx files
 function App() {
-	return (
-		<screengui
-			//all properties should be written in the component directly
-			ResetOnSpawn={false}
-		>
-			{/*Some other children*/}
-		</screengui>
-	);
-}
-
-function ComponentWithChildren({ children }: PropsWithChildren<{}>) {
-	return (
-		<frame
-		//...properties
-		>
-			{children}
-		</frame>
-	);
-}
-
-function ComponentWithFragment() {
-	return (
-		<>
-			<frame />
-			<frame />
-			<frame />
-		</>
-	);
+  return (
+    <screengui ResetOnSpawn={false}>{/* Some other children */}</screengui>
+  );
 }
 ```
 
-## Recommendation:
+You can create components with children using the PropsWithChildren type:
 
-- Using Centralized Root
+```tsx
+function ComponentWithChildren({ children }: PropsWithChildren<{}>) {
+  return <frame>{children}</frame>;
+}
+```
+
+Fragments are also supported, allowing you to group elements without adding extra nodes:
+
+```tsx
+function ComponentWithFragment() {
+  return (
+    <>
+      <frame />
+      <frame />
+      <frame />
+
+  );
+}
+```
+
+## Centralized App Structure
+
+It's preferred to have a centralized app structure with fragments containing all GUIs for better debugging. This approach organizes your UI components in a single root component:
 
 ```tsx
 export function App() {
-	return (
-		<>
-			<MountedGuis />
-			<LoadutPromptGui />
-			<DamageIndicatorGui />
+  return (
+    <>
+      <MountedGuis />
+      <LoadutPromptGui />
+      <DamageIndicatorGui />
+      <SideMenuGui />
+      <KillFeedbackGui />
+      <InventoryGui />
+      <CrosshairGui />
+      <CentralMenuGui />
+      <TopbarGui />
+      <ToolTipGui />
 
-			<SideMenuGui />
-
-			<KillFeedbackGui />
-			<InventoryGui />
-			<CrosshairGui />
-
-			<CentralMenuGui />
-			<TopbarGui />
-			<ToolTipGui />
-		</>
-	);
+  );
 }
 ```
 
-```ts
-//AVOID setting container as PlayerGui directly
-//It deletes every other Instance in PlayerGui including Roblox auto-injected ones and can break movement for mobile users
-const container = new Instance("ScreenGui");
+This centralized structure makes it easier to manage, debug, and understand the hierarchy of your UI components.
 
-//The ScreenGui can be used as the container and even have other ScreenGuis, BillboardGuis and SurfaceGuis in it without breaking
-//The Screen gui can contain other ScreenGuis/BillboardGuis/SurfaceGuis without breaking their functionality
+## Mounting Your App
 
-//The most important property that has to be set
-//otherwise all UI will disappear when the player dies
-container.ResetOnSpawn = false;
-container.Parent = Players.LocalPlayer.WaitForChild("PlayerGui");
+The recommendation is to use a Folder instead of ScreenGui as the container, as shown in the npm @rbxts/react documentation:
 
-const root = createRoot(container);
-root.render(React.createElement(App, {}));
+```tsx
+import React, { StrictMode } from "@rbxts/react";
+import { createPortal, createRoot } from "@rbxts/react-roblox";
+import { Players } from "@rbxts/services";
+
+const playerGui = Players.LocalPlayer.FindFirstChildOfClass("PlayerGui");
+const root = createRoot(new Instance("Folder"));
+root.render(<StrictMode>{createPortal(<App />, playerGui)}</StrictMode>);
 ```
+
+This approach is more flexible and aligns with the official documentation. Using a Folder with createPortal ensures that your UI components are properly mounted without disrupting other PlayerGui elements.

@@ -7,7 +7,7 @@ Atoms act like observable values.
 Example:
 
 ```ts
-const valueAtom = atom<SomeType>(startValue);
+const valueAtom = atom(startValue);
 const value = valueAtom(); //Getting the value
 valueAtom(otherValue); //Setting the value
 ```
@@ -18,18 +18,18 @@ Utility functions:
 //subscribe utility,
 //will subscribe to the changes of atom
 subscribe(valueAtom, (value) => {
-	HandleValue(value);
+  HandleValue(value);
 });
 
 //atom is a function, and you can detect and subscribe to atom at any depth of the function, no matter how nested it is
 subscribe(valueAtom, (value) => {});
 subscribe(
-	() => valueAtom(),
-	(value) => {},
+  () => valueAtom(),
+  (value) => {}
 );
 subscribe(
-	() => (() => valueAtom())(),
-	(value) => {},
+  () => (() => valueAtom())(),
+  (value) => {}
 );
 
 //effect utility
@@ -37,33 +37,33 @@ subscribe(
 
 //will run immediately and will re-run each time the subscribed atom has changed
 effect(() => {
-	const value = valueAtom();
-	DoSomething(value);
+  const value = valueAtom();
+  DoSomething(value);
 
-	//returns cleanup function that will be executed if the atom will change and the callback will be re-run
-	return () => {
-		CleanUp();
-	};
+  //returns cleanup function that will be executed if the atom will change and the callback will be re-run
+  return () => {
+    CleanUp();
+  };
 });
 
 //effect will only subscribe to atoms that have been read
 const condition = false;
 effect(() => {
-	if (condition) {
-		const value1 = valueAtom1(); //will never be subscribed to, because it reads only Atom2, but it
-		DoSomething(value1);
-	} else {
-		const value2 = valueAtom2();
-		DoSomething(value2);
-	}
+  if (condition) {
+    const value1 = valueAtom1(); //will never be subscribed to, because it reads only Atom2, but it
+    DoSomething(value1);
+  } else {
+    const value2 = valueAtom2();
+    DoSomething(value2);
+  }
 
-	return CleanUpFunction;
+  return CleanUpFunction;
 });
 
 //peek utility
 //it will prevent atom from being subscribed to, at any depth
 effect(() => {
-	const value = peek(valueAtom); //will never get subscribed to and therefore the function in effect will never re-run;
+  const value = peek(valueAtom); //will never get subscribed to and therefore the function in effect will never re-run;
 });
 ```
 
@@ -79,13 +79,13 @@ const valueAtom = atom(startValue);
 
 ```ts
 function GetValueAtom() {
-	//adding Atom to track
-	return valueAtom();
+  //adding Atom to track
+  return valueAtom();
 }
 
 function GetSomethingRelatedAtom() {
-	//still add atom because it has the function that reads atom directly
-	const value = GetValueAtom();
+  //still add atom because it has the function that reads atom directly
+  const value = GetValueAtom();
 }
 ```
 
@@ -93,8 +93,8 @@ function GetSomethingRelatedAtom() {
 
 ```ts
 function DoSomething() {
-	//No need to add Atom postfix because we prevented subscription to atom inside by using peek
-	const value = peek(GetValueAtom); //because peek doesn't allow to subscribe to any atoms inside and therefore prevents chain of subscription
+  //No need to add Atom postfix because we prevented subscription to atom inside by using peek
+  const value = peek(GetValueAtom); //because peek doesn't allow to subscribe to any atoms inside and therefore prevents chain of subscription
 }
 ```
 
@@ -102,7 +102,7 @@ function DoSomething() {
 
 ```ts
 function DoSomething() {
-	//as well, avoid Atom because it's not subscribable
-	const value = peek(GetValueAtom); //should prevent any subscriptions
+  //as well, avoid Atom because it's not subscribable
+  const value = peek(GetValueAtom); //should prevent any subscriptions
 }
 ```

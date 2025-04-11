@@ -1,50 +1,39 @@
-# @flamework/core
+# Flamework Core Basics
 
-Flamework uses items like:
+Flamework is a TypeScript game framework designed for Roblox development that emphasizes simplicity and extensibility. The `@flamework/core` package provides the foundation of the framework with several key features that help structure and organize your code.
 
-- Controllers - purely for client
-- Services - purely for server
-- Systems - doesn't exist in flamework, but it implies that it's a Controller and Service at the same time
+## Core Concepts
 
-## Auto injection:
+### Singletons
 
-- Flamework has auto-injection in constructors for Controllers, Services, and Components
-- ONLY Controllers, Services, and Systems can be used for auto-injection, everything else can be used by direct reference or follows other instructions if provided
-- The auto-injection should be avoided in systems unless it's another system to keep the systems as isolated and as self-sustainable as possible
+Flamework organizes code through three main types of singletons:
 
-## Services / Controllers / Systems
+- **Controllers**: Client-sided singletons responsible for specific features
+- **Services**: Server-sided singletons responsible for specific features
+- **Systems**: Shared singletons that run on both server and client simultaneously
 
-- OnInit()
+### Lifecycle Events
 
-```ts
-//is executed before injection
-//it is not recommended to use any other controllers / services / systems here
-//it can be used for initialization of the controller / service / system
-```
+Flamework provides non-obtrusive lifecycle events that are easy to implement:
 
-- OnStart()
+- **OnInit()**: Executed before dependency injection; used for initialization
+- **OnStart()**: Executed after injection when the component is ready
 
-```ts
-//is executed after injection when the Controller / service / system is ready
-```
+### Dependency Injection
 
-- constructor()
+One of Flamework's key features is constructor-based dependency injection:
 
 ```ts
-//used for injection of the Controllers / Services / Systems
-//syntax:
 constructor(
-  private readonly _someController: SomeController, //client only
-  private readonly _someService: SomeService, //server only
-  private readonly _someSystem: SomeSystem, //shared, server and client
+  private readonly _someController: SomeController, // client only
+  private readonly _someService: SomeService, // server only
+  private readonly _someSystem: SomeSystem // shared
 ){ }
 ```
 
-## Controller
+## Controllers
 
-Client-sided Singleton responsible for a specific feature
-
-Example:
+Controllers handle client-side functionality:
 
 ```ts
 import { Controller, OnStart, OnInit } from "@flamework/core";
@@ -56,17 +45,19 @@ export class SomeController implements OnStart, OnInit {
     private readonly _someOtherSystem: SomeOtherSystem
   ) {}
 
-  onInit() {}
+  onInit() {
+    // Initialization code
+  }
 
-  onStart() {}
+  onStart() {
+    // Code that runs after injection
+  }
 }
 ```
 
-## Service
+## Services
 
-Server-sided Singleton responsible for a specific feature
-
-Example:
+Services handle server-side functionality:
 
 ```ts
 import { Service, OnStart, OnInit } from "@flamework/core";
@@ -78,53 +69,32 @@ export class SomeService implements OnStart, OnInit {
     private readonly _someOtherSystem: SomeOtherSystem
   ) {}
 
-  onInit() {}
+  onInit() {
+    // Initialization code
+  }
 
-  onStart() {}
+  onStart() {
+    // Code that runs after injection
+  }
 }
 ```
 
 ## Systems
 
-Shared Singleton responsible for a specific feature
-
-Should be as isolated as possible
-
-**Important clarification on Systems isolation**:
-
-- Systems run on BOTH server and client simultaneously
-- Systems should NOT rely on Controllers or Services, but CAN rely on other Systems
-- Only use Systems when functionality is required by both server and client and doesn't have a clear separation
-- For functionality that should run exclusively on client or server, use Controllers or Services instead
-- When including limited server-only or client-only functionality in Systems, use runtime assertions:
-
-```ts
-assert(RunService.IsClient(), "This function should run ONLY on the client");
-assert(RunService.IsServer(), "This function should run ONLY on the server");
-```
-
-- System instances on server and client maintain separate states and do not automatically synchronize
-
-- If state synchronization between server and client is needed, you must use explicit networking solutions:
-  - @flamework/core networking (recommended)
-  - Roblox RemoteEvents/RemoteFunctions
-  - Any other provided networking library
-
-Example:
+Systems run on both client and server simultaneously and should be designed to be as isolated as possible:
 
 ```ts
 @Controller({})
 @Service({})
 export class SomeSystem implements OnStart, OnInit {
   constructor(
-    private readonly _someOtherSystem: SomeOtherSystem //only other systems are allowed in auto-injection
+    private readonly _someOtherSystem: SomeOtherSystem // only other systems allowed in auto-injection
   ) {}
 
   onInit() {}
-
   onStart() {}
 
-  // Example of a client-only function within a System
+  // For client-only functionality within a System
   public ClientOnlyFunction() {
     assert(
       RunService.IsClient(),
@@ -133,7 +103,7 @@ export class SomeSystem implements OnStart, OnInit {
     // Client-specific code
   }
 
-  // Example of a server-only function within a System
+  // For server-only functionality within a System
   public ServerOnlyFunction() {
     assert(
       RunService.IsServer(),
@@ -144,103 +114,148 @@ export class SomeSystem implements OnStart, OnInit {
 }
 ```
 
+**Important notes about Systems**:
+
+- They run on BOTH server and client simultaneously
+- They should NOT rely on Controllers or Services
+- System instances on server and client maintain separate states
+- If state synchronization is needed, explicit networking solutions must be used
+
 ## Components
 
-A class responsible for instance control
-
-Includes:
-
-- Attributes guard - validates attributes on Roblox instances
-- Instance guard - ensures the instance is of correct type
-
-Uses auto-injection as well for Services / Controllers / Systems
-
-```ts
-constructor(
-  private readonly _someOtherController: SomeOtherController, //client only components
-  private readonly _someOtherService: SomeOtherService, //server only components,
-  private readonly _someOtherSystem: SomeOtherSystem //server, client and shared components
-){
-  super(); //requires super, because it extends the BaseComponent class
-}
-```
-
-Example:
+Components handle instance control with attributes and instance type validation:
 
 ```ts
 import { OnStart } from "@flamework/core";
 import { Component, BaseComponent } from "@flamework/components";
 
 interface Attributes {
-  //attributes guard - defines expected attributes and their types
   Value1: number;
   Value2: string;
-  //etc.
 }
 
-type InstanceGuard = BasePart; //or any other Instance, that will ensure that the instance has that class
-
-type InstanceGuardWithChildren = BasePart & { ChildName: Model }; //can be used in combination with object that has Instance Children names and types
-
-// Cannot be used with the Instance Property Names
-type InstanceGuardWithIncorrectChildName = BasePart & { Name: TextLabel }; //INCORRECT, because BasePart has a property Name on it, and it can lead to undefined behavior
-
-// Cannot be used to validate Properties of the Instance
-type InstanceGuardWithIllegalTypes = TextLabel & { Text: "Hello" }; //INCORRECT, Will cause an error
+type InstanceGuard = BasePart; // Instance type validation
 
 @Component({
-  //optional but important for proper attribute handling
-  //if the instance doesn't have Attributes set, it will error, therefore defaults can be used for cases like this
-  //when provided, will replace missing values in attributes with specified values
   defaults: {
     Value1: 5,
     Value2: "test",
   },
 })
-class CarsGameData
-  extends BaseComponent<Attributes, InstanceGuard>
-  implements OnStart
-{
+class MyComponent extends BaseComponent implements OnStart {
   constructor(
-    private readonly _someOtherController: SomeOtherController,
-    private readonly _someOtherService: SomeOtherService,
-    private readonly _someOtherSystem: SomeOtherSystem
+    private readonly _someController: SomeController,
+    private readonly _someService: SomeService,
+    private readonly _someSystem: SomeSystem
   ) {
     super();
   }
+
   onStart() {}
 
-  // You can access attributes via this.attributes
   GetValueOne(): number {
     return this.attributes.Value1;
   }
 }
 ```
 
-The components don't require a special decorator to separate on Server, Client, and Shared.
+## Accessing Singletons
 
-## Getting Services, Controllers, Systems
-
-To get Services, Controllers, Systems, and Components, use the Dependency() function.
-
-Dependency is a macro that uses generics to get the instance of the requested Service, Controller, and System.
-
-You cannot get the instance of a Component without special handling. If not used correctly, it can lead to undefined behavior.
-
-Syntax:
+To access singletons outside of constructor injection, use the Dependency function:
 
 ```ts
-const someController = Dependency<SomeController>();
-const someService = Dependency<SomeService>();
-const someSystem = Dependency<SomeSystem>();
+const someController = Dependency();
+const someService = Dependency();
+const someSystem = Dependency();
 
-//Separate handling for instances
-const components = Dependency<Components>(); //Getting special System
-const component1 = components.getComponent<SomeComponent>(instance); //will try to get the component from the instance, can be undefined
-
-const component2 = await components.waitForComponent<SomeComponent>(instance); //returns async that awaits the component in instance
-
-const componentsList = components.getAllComponents<SomeComponents>(instance); //gets all Components of specified type that exist on instances
+// For components:
+const components = Dependency();
+const component = components.getComponent(instance);
+const componentAsync = await components.waitForComponent(instance);
+const allComponents = components.getAllComponents(instance);
 ```
 
-You CANNOT use Dependency before ignition `Flamework.ignite();`, this will cause an error, therefore injection should be preferred. Avoid using it in global space. Functions can be acceptable.
+Note that you cannot use Dependency before `Flamework.ignite();` is called.
+
+## Benefits of Flamework
+
+- Minimizes boilerplate code
+- Supports optional lifecycle events
+- Automatically generates type guards for networking and components
+- Designed to be extended via modding API
+- Splits functionality into packages so you only install what you need
+
+Flamework provides a structured yet flexible approach to Roblox TypeScript development, making it easier to organize and maintain complex game code while maintaining type safety.
+
+## System Isolation Example
+
+```ts
+// GOOD: Properly isolated system
+@Controller({})
+@Service({})
+export class WeaponSystem implements OnStart, OnInit {
+  // Only depends on other systems
+  constructor(private readonly _damageSystem: DamageSystem) {}
+
+  // Shared logic used by both client and server
+  CalculateDamage(weapon: string, distance: number): number {
+    return (
+      this._damageSystem.getBaseDamage(weapon) *
+      this.getFalloffMultiplier(distance)
+    );
+  }
+
+  // Client-only functionality with safety check
+  PlayWeaponEffects(weapon: string): void {
+    assert(
+      RunService.IsClient(),
+      "Weapon effects can only be played on the client"
+    );
+    // Effect playing code
+  }
+}
+
+// BAD: System with improper dependencies
+@Controller({})
+@Service({})
+export class BadWeaponSystem implements OnStart, OnInit {
+  constructor(
+    private readonly _playerController: PlayerController, // BAD: Depends on Controller
+    private readonly _dataService: DataService // BAD: Depends on Service
+  ) {}
+
+  // This system will have issues as it attempts to use client/server specific
+  // components without proper isolation
+}
+```
+
+## Component Attributes Best Practices
+
+```ts
+interface Attributes {
+  Health: number;
+  Speed: number;
+  CanRespawn: boolean;
+}
+// GOOD: Component with clear attribute handling
+@Component({
+  defaults: {
+    Health: 100,
+    Speed: 16,
+    CanRespawn: true,
+  },
+})
+class CharacterComponent extends BaseComponent<Attributes, Model> {
+  // Component implementation
+
+  TakeDamage(amount: number): void {
+    // Attributes are automatically synchronized with Roblox instance attributes
+    this.attributes.Health -= amount;
+
+    // You can update an attribute like this
+    if (this.attributes.Health <= 0) {
+      this.attributes.CanRespawn = false;
+    }
+  }
+}
+```
