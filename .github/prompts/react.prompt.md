@@ -76,3 +76,37 @@ root.render(<StrictMode>{createPortal(<App />, playerGui)}</StrictMode>);
 ```
 
 This approach is more flexible and aligns with the official documentation. Using a Folder with createPortal ensures that your UI components are properly mounted without disrupting other PlayerGui elements.
+
+## Bindings
+
+Bindings are the states that dont trigger the re-render, but they change the property.
+Bindings allow very rapid changes.
+Bindings are exlusive to @rbxts/react.
+
+**Usage**
+
+```tsx
+const [binding, setBinding] = useBinding(initialState);
+
+useEffect(() => {
+  //allows rapid changes without re-rendering whole component
+  const connection = RunService.RenderStepped.Connect((dt) => {
+    const value = updateSpring(dt);
+    setBinding(value);
+  });
+
+  return () => connection.Disconnect();
+}, []);
+
+const derivedBinding = binding.map((value) => {
+  return value ** 2;
+});
+
+//passing binding directly into the property allowing it to subscribe to it
+return (
+  <frame
+    Transparency={derivedBinding}
+    //...
+  />
+);
+```
