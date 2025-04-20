@@ -28,7 +28,11 @@ const enum Direction {
 
 ```ts
 // BAD: Inlined interface
-class CharacterComponent extends BaseComponent {
+class CharacterComponent extends BaseComponent<{
+  Health: number;
+  Speed: number;
+  CanRespawn: boolean;
+}> {
   // Implementation
 }
 
@@ -39,7 +43,7 @@ interface CharacterAttributes {
   CanRespawn: boolean;
 }
 
-class CharacterComponent extends BaseComponent {
+class CharacterComponent extends BaseComponent<CharacterAttributes> {
   // Implementation with better readability
 }
 ```
