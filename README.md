@@ -49,3 +49,9 @@ bun i
 npx degit https://github.com/Velover/TSFlameworkGameTemplate#Features
 npm i
 ```
+
+### Roblox Ui Bible
+
+Tools and guide to design multi-device ui (multi-platform-ui-design-bible.prompt.md)
+
+https://github.com/Velover/RobloxUIBible
