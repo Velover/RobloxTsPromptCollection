@@ -3,7 +3,7 @@
 ## Sorting
 
 ```ts
-const sortedArray = numberArray.sort((a, b) => a > b); //A function that defines the sort order. Returns true when the first element must come before the second. If omitted, the array is sorted according to the < operator.
+const sortedArray = numberArray.sort((a, b) => a > b); //A function that defines the sort order. Returns true when the first element must come before the second. If omitted, the array is sorted according to the < operator. IT IS CORRECT WAY, because the roblox-ts uses luau sort
 ```
 
 ## String char getting
