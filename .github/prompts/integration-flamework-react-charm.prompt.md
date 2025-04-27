@@ -63,7 +63,7 @@ import { ShopMenuController } from "path/to/controller";
 
 function ShopMenu() {
   // Access controller with memoization
-  const shopMenuController = useFlameworkDependency();
+  const shopMenuController = useFlameworkDependency<ShopMenuController>();
 
   // Use the controller's atom hook
   const isVisible = shopMenuController.useMenuVisibleAtom();
