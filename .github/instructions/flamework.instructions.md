@@ -141,6 +141,7 @@ type InstanceGuard = BasePart; // Instance type validation
     Value1: 5,
     Value2: "test",
   },
+  tag: "MyComponent" //Tag that should be applied to instance. The instances with that tag will be instantiated with this compomponent
 })
 class MyComponent extends BaseComponent implements OnStart {
   constructor(
